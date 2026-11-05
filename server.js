@@ -10,6 +10,12 @@ const {
    BASE_URL = 'https://servicios.cardnet.com.do/servicios/tokens/v1',
 } = process.env;
 
+
+headers: {
+  'Authorization': `Basic ${process.env.PRIVATE_KEY}`,
+  'Content-Type': 'application/json'
+}
+
 if (!PRIVATE_KEY || !PUBLIC_KEY) {
   console.error('Falta PRIVATE_KEY o PUBLIC_KEY en .env (copia .env.example a .env)');
   process.exit(1);
