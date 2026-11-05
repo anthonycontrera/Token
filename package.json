@@ -1,0 +1,16 @@
+{
+  "name": "cardnet-tokenizacion",
+  "version": "1.0.0",
+  "description": "Pruebas de tokenización CardNET: Customer, captura de tarjeta, activación y compra",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "dotenv": "^16.6.1",
+    "express": "^4.19.2"
+  }
+}

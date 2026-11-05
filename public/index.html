@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CardNET · Tokenización y Pagos</title>
+<style>
+:root {
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --tx: #0f172a;
+  --mut: #64748b;
+  --bd: #e2e8f0;
+  --ac: #2563eb;
+  --ac-hover: #1d4ed8;
+  --ok: #16a34a;
+  --er: #dc2626;
+  --warning: #d97706;
+  --code: #f1f5f9;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+@media(prefers-color-scheme: dark) {
+  :root {
+    --bg: #090d16;
+    --card: #111827;
+    --tx: #f3f4f6;
+    --mut: #9ca3af;
+    --bd: #1f2937;
+    --ac: #3b82f6;
+    --ac-hover: #60a5fa;
+    --ok: #22c55e;
+    --er: #ef4444;
+    --warning: #f59e0b;
+    --code: #1f2937;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  }
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--tx);
+  font: 14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  padding: 24px;
+}
+
+main {
+  max-width: 1100px;
+  margin: auto;
+}
+
+header {
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--bd);
+  padding-bottom: 12px;
+}
+
+h1 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ac);
+  margin: 0 0 4px;
+}
+
+header p {
+  color: var(--mut);
+  font-size: 13px;
+  margin: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media(max-width: 768px) {
+  .grid { grid-template-columns: 1fr; }
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+  transition: transform 0.2s ease;
+}
+
+.card h2 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--bd);
+  padding-bottom: 8px;
+}
+
+.full { grid-column: 1 / -1; }
+
+label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mut);
+  margin: 10px 0 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+input, select {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--bd);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--tx);
+  font: inherit;
+  transition: border-color 0.2s;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--ac);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+button {
+  margin-top: 16px;
+  margin-right: 8px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--ac);
+  color: #fff;
+  font-weight: 600;
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+button:hover { background: var(--ac-hover); }
+button:active { transform: scale(0.98); }
+
+button.sec {
+  background: transparent;
+  color: var(--ac);
+  border: 1px solid var(--ac);
+  padding: 6px 12px;
+  margin: 0;
+}
+button.sec:hover { background: var(--code); }
+
+.hint {
+  font-size: 12px;
+  color: var(--mut);
+  margin-top: 4px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 12px;
+}
+
+td, th {
+  text-align: left;
+  padding: 8px;
+  border-bottom: 1px solid var(--bd);
+}
+
+th {
+  font-weight: 600;
+  color: var(--mut);
+}
+
+pre {
+  background: var(--code);
+  border: 1px solid var(--bd);
+  border-radius: 8px;
+  padding: 14px;
+  margin: 8px 0 0;
+  overflow: auto;
+  max-height: 250px;
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.ok { color: var(--ok); font-weight: 600; }
+.er { color: var(--er); font-weight: 600; }
+.warning-msg { color: var(--warning); font-weight: 600; }
+
+code {
+  background: var(--code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.status-box {
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  min-height: 20px;
+}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>CardNET · Pasarela de Tokenización</h1>
+  <p>Flujo completo: Crear Cliente → Capturar Tarjeta → Activar Token → Ejecutar Compra</p>
+</header>
+
+<div class="grid">
+  <!-- 1. CREAR CUSTOMER -->
+  <section class="card">
+    <h2>1. Crear Customer</h2>
+    <label>Email *</label>
+    <input id="c_email" value="prueba001@gmail.com">
+    <div class="row">
+      <div><label>Nombre</label><input id="c_fn"></div>
+      <div><label>Apellido</label><input id="c_ln"></div>
+    </div>
+    <button id="b_create">Crear Customer</button>
+    <label>CustomerId activo</label>
+    <input id="cid" placeholder="Se llena al crear o escribir uno existente">
+  </section>
+
+  <!-- 2. REGISTRAR TARJETA -->
+  <section class="card">
+    <h2>2. Registrar tarjeta</h2>
+    <p class="hint">Pide un <code>UniqueID</code> al servidor y abre el iframe de CardNET.</p>
+    <div style="display: flex; gap: 8px; margin-top: 12px;">
+      <button id="b_capture" style="margin-top:0;">Abrir Captura</button>
+      <button id="b_profiles" class="sec">Recargar Perfiles</button>
+    </div>
+    <table id="profiles"><tr><td class="hint">Sin perfiles cargados.</td></tr></table>
+    <form id="shoppingcart_form"><input type="hidden" id="PWToken" name="PWToken"></form>
+  </section>
+
+  <!-- 3. ACTIVAR TOKEN -->
+  <section class="card">
+    <h2>3. Activar token</h2>
+    <label>Token (PaymentProfile)</label>
+    <input id="a_tok" placeholder="CT__...">
+    <label>ActivationCode (del microcargo de RD$1.00)</label>
+    <input id="a_code">
+    <button id="b_act">Activar Tarjeta</button>
+    <div id="activation-status" class="status-box"></div>
+  </section>
+
+  <!-- 4. COMPRA -->
+  <section class="card">
+    <h2>4. Compra</h2>
+    <label>TrxToken</label>
+    <input id="p_tok" placeholder="CT__...">
+    <div class="row">
+      <div><label>Order</label><input id="p_ord"></div>
+      <div><label>Currency</label><input id="p_cur" value="DOP"></div>
+    </div>
+    <div class="row">
+      <div><label>Amount (10000 = 100.00)</label><input id="p_amt" type="number" value="10000"></div>
+      <div><label>Tip</label><input id="p_tip" type="number" value="0"></div>
+    </div>
+    <div class="row">
+      <div><label>Invoice</label><input id="p_inv" value="000021"></div>
+      <div><label>Tax</label><input id="p_tax" value="245"></div>
+    </div>
+    <div class="row">
+      <div><label>CustomerIP</label><input id="p_ip" value="108.100.81.214"></div>
+      <div>
+        <label>Capture</label>
+        <select id="p_cap"><option value="true">true</option><option value="false">false</option></select>
+      </div>
+    </div>
+    <button id="b_buy">Pagar</button>
+  </section>
+
+  <!-- LOG -->
+  <section class="card full">
+    <h2>Consola de Registro (Log)</h2>
+    <pre id="log">Listo para procesar operaciones...</pre>
+  </section>
+</div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const v = id => $(id).value.trim();
+let cfg;
+
+function log(title, status, data) {
+  const cls = status && status < 400 ? 'ok' : 'er';
+  $('log').innerHTML = `<span class="${status ? cls : ''}">${title}${status ? ' → HTTP ' + status : ''}</span>\n` +
+    (data ? JSON.stringify(data, null, 2) : '');
+}
+
+async function api(method, url, body) {
+  const r = await fetch(url, {
+    method, headers: { 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const j = await r.json().catch(() => ({}));
+  log(`${method} ${url}`, r.status, j);
+  return { ok: r.ok, j };
+}
+
+function newOrder() { $('p_ord').value = String(Date.now()).slice(-9); }
+
+function needCustomer() {
+  const id = v('cid');
+  if (!id) alert('Primero crea o escribe un CustomerId.');
+  return id;
+}
+
+// Cargar PWCheckout.js desde CardNET
+async function init() {
+  newOrder();
+  try {
+    cfg = await (await fetch('/api/config')).json();
+    const s = document.createElement('script');
+    s.src = cfg.scriptUrl;
+    s.onload = () => {
+      PWCheckout.Bind('tokenCreated', onTokenCreated);
+      PWCheckout.SetProperties({
+        name: 'Registro de tarjeta', description: 'Registro de medio de pago',
+        'button-label': 'Guardar', currency: 'DOP', amount: '100', lang: 'ESP',
+        form_id: 'shoppingcart_form', checkout_card: 1, autoSubmit: 'false', empty: 'true',
+      });
+    };
+    s.onerror = () => log('No se pudo cargar PWCheckout.js', 0, { url: cfg.scriptUrl });
+    document.head.appendChild(s);
+  } catch(e) {
+    console.error("Error al inicializar configuración", e);
+  }
+}
+
+// 1. Crear Customer
+$('b_create').onclick = async () => {
+  const body = { Email: v('c_email') };
+  if (v('c_fn')) body.FirstName = v('c_fn');
+  if (v('c_ln')) body.LastName = v('c_ln');
+  const { j } = await api('POST', '/api/customers', body);
+  if (j.Response && j.Response.CustomerId) $('cid').value = j.Response.CustomerId;
+};
+
+// 2. Captura: UniqueID nuevo en cada apertura
+$('b_capture').onclick = async () => {
+  const id = needCustomer(); if (!id) return;
+  if (typeof PWCheckout === 'undefined') return alert('PWCheckout.js no cargó.');
+  const { j } = await api('GET', `/api/customers/${encodeURIComponent(id)}`);
+  const uid = j.Response && j.Response.UniqueID;
+  if (!uid) return alert('El Customer no devolvió UniqueID. Revisa el log.');
+  PWCheckout.OpenIframeCustom(`${cfg.captureUrl}?key=${cfg.publicKey}&session_id=${uid}`, uid);
+};
+
+function onTokenCreated(token) {
+  log('tokenCreated', 200, token);
+  loadProfiles();
+}
+
+async function loadProfiles() {
+  const id = needCustomer(); if (!id) return;
+  const { j } = await api('GET', `/api/customers/${encodeURIComponent(id)}`);
+  const ps = (j.Response && j.Response.PaymentProfiles) || [];
+  const t = $('profiles');
+  if (!ps.length) { t.innerHTML = '<tr><td class="hint">Sin perfiles todavía.</td></tr>'; return; }
+  t.innerHTML = '<tr><th>Tarjeta</th><th>Estado</th><th>Acción</th></tr>' + ps.map((p, i) =>
+    `<tr><td>${p.Brand || ''} •••• ${p.Last4 || ''}</td>
+     <td class="${p.Enabled ? 'ok' : 'er'}">${p.Enabled ? 'Activo' : 'Pendiente activación'}</td>
+     <td><button class="sec" data-i="${i}">Usar</button></td></tr>`).join('');
+  t.querySelectorAll('button').forEach(b => b.onclick = () => {
+    const tok = ps[b.dataset.i].Token;
+    $('a_tok').value = tok; $('p_tok').value = tok;
+  });
+}
+$('b_profiles').onclick = loadProfiles;
+
+// 3. Activación con validación real de la API
+$('b_act').onclick = async () => {
+  const id = needCustomer(); if (!id) return;
+  const statusDiv = $('activation-status');
+  
+  statusDiv.className = "status-box warning-msg";
+  statusDiv.textContent = "activando tarjeta...";
+
+  const res = await api('POST', `/api/customers/${encodeURIComponent(id)}/activate`,
+    { Token: v('a_tok'), ActivationCode: v('a_code') });
+  
+  // Verificamos si la respuesta fue exitosa (HTTP 200 y sin errores internos de CardNET)
+  if (res.ok && (!res.j.Errors || res.j.Errors.length === 0)) {
+    statusDiv.className = "status-box ok";
+    statusDiv.textContent = "tarjeta activada exitosamente";
+    loadProfilesQuiet();
+  } else {
+    // Extraemos el mensaje de error de CardNET si existe (ej. TK009)
+    const errorMsg = res.j.Errors && res.j.Errors[0] ? res.j.Errors[0].Message : "Error al activar la tarjeta.";
+    statusDiv.className = "status-box er";
+    statusDiv.textContent = errorMsg;
+  }
+};
+
+async function loadProfilesQuiet() {
+  const id = v('cid'); if (!id) return;
+  const r = await fetch(`/api/customers/${encodeURIComponent(id)}`);
+  const j = await r.json().catch(() => ({}));
+  const keep = $('log').innerHTML;
+  const ps = (j.Response && j.Response.PaymentProfiles) || [];
+  $('profiles').innerHTML = '<tr><th>Tarjeta</th><th>Estado</th></tr>' + ps.map(p =>
+    `<tr><td>${p.Brand || ''} •••• ${p.Last4 || ''}</td><td class="${p.Enabled ? 'ok' : 'er'}">${p.Enabled ? 'Activo' : 'Pendiente activación'}</td></tr>`).join('');
+  $('log').innerHTML = keep;
+}
+
+// 4. Compra
+$('b_buy').onclick = async () => {
+  await api('POST', '/api/purchase', {
+    TrxToken: v('p_tok'), Order: v('p_ord'), Amount: v('p_amt'), Tip: v('p_tip'),
+    Currency: v('p_cur'), Capture: v('p_cap'), CustomerIP: v('p_ip'),
+    Invoice: v('p_inv'), Tax: v('p_tax'),
+  });
+  newOrder();
+};
+
+init();
+</script>
+</body>
+</html>
