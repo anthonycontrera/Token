@@ -5,16 +5,10 @@ const path = require('path');
 const {
   PRIVATE_KEY, PUBLIC_KEY, PORT = 3000, AUTH_MODE = 'raw',
   //test
- // BASE_URL = 'https://labservicios.cardnet.com.do/servicios/tokens/v1',
- //PRO
-   BASE_URL = 'https://servicios.cardnet.com.do/servicios/tokens/v1',
+  // BASE_URL = 'https://labservicios.cardnet.com.do/servicios/tokens/v1',
+  //PRO
+  BASE_URL = 'https://servicios.cardnet.com.do/servicios/tokens/v1',
 } = process.env;
-
-
-headers: {
-  'Authorization': `Basic ${process.env.PRIVATE_KEY}`,
-  'Content-Type': 'application/json'
-}
 
 if (!PRIVATE_KEY || !PUBLIC_KEY) {
   console.error('Falta PRIVATE_KEY o PUBLIC_KEY en .env (copia .env.example a .env)');
@@ -57,6 +51,7 @@ app.get('/api/config', (_req, res) => res.json({
   // Endpoint REST de captura: conservar temporalmente
   captureUrl: `${BASE_URL}/Capture/`,
 }));
+
 // 1. Crear Customer
 app.post('/api/customers', (req, res) =>
   cardnet(res, 'POST', '/Customer', { Enable: 'true', ...req.body }));
