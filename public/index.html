@@ -220,7 +220,7 @@ code {
 <main>
 <header>
   <h1>CardNET · Pasarela de Tokenización</h1>
-  <p>Flujo completo: Crear Cliente → Capturar Tarjeta → Activar Token → Ejecutar Compra</p>
+  <p>Flujo completo: Crear Cliente → Capturar Tarjeta → Activar Token → Ejecutar Compra → Reembolso</p>
 </header>
 
 <div class="grid">
@@ -286,6 +286,20 @@ code {
       </div>
     </div>
     <button id="b_buy">Pagar</button>
+  </section>
+
+  <!-- 5. REEMBOLSO -->
+  <section class="card">
+    <h2>5. Reembolso (Refund)</h2>
+    <label>TransactionId (ID de la transacción original)</label>
+    <input id="r_tx" placeholder="Ej. 12345678...">
+    <div class="row">
+      <div><label>Amount a devolver</label><input id="r_amt" type="number" value="10000"></div>
+      <div><label>Currency</label><input id="r_cur" value="DOP"></div>
+    </div>
+    <label>Motivo (Reason)</label>
+    <input id="r_reason" value="Solicitud del cliente">
+    <button id="b_refund">Procesar Reembolso</button>
   </section>
 
   <!-- LOG -->
@@ -399,13 +413,11 @@ $('b_act').onclick = async () => {
   const res = await api('POST', `/api/customers/${encodeURIComponent(id)}/activate`,
     { Token: v('a_tok'), ActivationCode: v('a_code') });
   
-  // Verificamos si la respuesta fue exitosa (HTTP 200 y sin errores internos de CardNET)
   if (res.ok && (!res.j.Errors || res.j.Errors.length === 0)) {
     statusDiv.className = "status-box ok";
     statusDiv.textContent = "tarjeta activada exitosamente";
     loadProfilesQuiet();
   } else {
-    // Extraemos el mensaje de error de CardNET si existe (ej. TK009)
     const errorMsg = res.j.Errors && res.j.Errors[0] ? res.j.Errors[0].Message : "Error al activar la tarjeta.";
     statusDiv.className = "status-box er";
     statusDiv.textContent = errorMsg;
