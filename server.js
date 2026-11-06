@@ -81,15 +81,43 @@ app.post('/api/purchase', (req, res) => {
   });
 }); // <--- ¡Aquí se cierra correctamente app.post('/api/purchase')!
 
-// 5. Reembolso / Devolución (Refund)
-app.post('/api/refund', (req, res) => {
-  const b = req.body;
-  cardnet(res, 'POST', '/Refund', {
-    TransactionId: b.TransactionId, // ID de la transacción original a reembolsar
-    Amount: Number(b.Amount),       // Monto a devolver
-    Currency: b.Currency || 'DOP',
-    Reason: b.Reason || 'Solicitud del cliente'
-  });
+// 7.2.3. Anular una compra (Refund)
+app.post('/api/refund', async (req, res) => {
+  try {
+    const { TransactionId, Amount, Currency, Reason } = req.body;
+    
+    if (!TransactionId) {
+      return res.status(400).json({ error: "El TransactionId es obligatorio." });
+    }
+
+    // URL oficial exacta según la documentación de CardNET
+    const refundUrl = `${BASE_URL}/v1/api/purchase/${TransactionId}/refund`;
+
+    const response = await fetch(refundUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic ' + Buffer.from(`${USERNAME}:${PASSWORD}`).toString('base64')
+      },
+      body: JSON.stringify({
+        Amount: Number(Amount),
+        Currency: Currency || "DOP",
+        Reason: Reason || "Anulacion de compra"
+      })
+    });
+
+    const data = await response.json().catch(() => ({}));
+    
+    if (!response.ok) {
+      console.error("Error devuelto por CardNET en Reembolso:", data);
+      return res.status(response.status).json(data);
+    }
+
+    res.json(data);
+  } catch (err) {
+    console.error("Excepción interna en /api/refund:", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.listen(PORT, () => console.log(`http://localhost:${PORT}  (${BASE_URL})`));
