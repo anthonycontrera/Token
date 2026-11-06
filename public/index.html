@@ -433,6 +433,18 @@ $('b_buy').onclick = async () => {
   newOrder();
 };
 
+// 5. Reembolso
+$('b_refund').onclick = async () => {
+  const txId = v('r_tx');
+  if (!txId) return alert('Debes ingresar el ID de la transacción a reembolsar.');
+  await api('POST', '/api/refund', {
+    TransactionId: txId,
+    Amount: v('r_amt'),
+    Currency: v('r_cur'),
+    Reason: v('r_reason')
+  });
+};
+
 init();
 </script>
 </body>
