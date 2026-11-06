@@ -79,6 +79,17 @@ app.post('/api/purchase', (req, res) => {
     CustomerIP: b.CustomerIP || req.ip,
     DataDo: { Tax: String(b.Tax ?? '0'), Invoice: String(b.Invoice) },
   });
+}); // <--- ¡Aquí se cierra correctamente app.post('/api/purchase')!
+
+// 5. Reembolso / Devolución (Refund)
+app.post('/api/refund', (req, res) => {
+  const b = req.body;
+  cardnet(res, 'POST', '/Refund', {
+    TransactionId: b.TransactionId, // ID de la transacción original a reembolsar
+    Amount: Number(b.Amount),       // Monto a devolver
+    Currency: b.Currency || 'DOP',
+    Reason: b.Reason || 'Solicitud del cliente'
+  });
 });
 
 app.listen(PORT, () => console.log(`http://localhost:${PORT}  (${BASE_URL})`));

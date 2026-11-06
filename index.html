@@ -31,7 +31,7 @@ code{background:var(--code);padding:1px 5px;border-radius:4px}
 </head>
 <body>
 <main>
-<h1>CardNET · Customer → Captura de tarjeta → Activación → Compra</h1>
+<h1>CardNET · Customer → Captura de tarjeta → Activación → Compra → Reembolso</h1>
 
 <div class="grid">
 <section class="card">
@@ -66,6 +66,18 @@ code{background:var(--code);padding:1px 5px;border-radius:4px}
 <div class="row"><div><label>Invoice</label><input id="p_inv" value="000021"></div><div><label>Tax</label><input id="p_tax" value="245"></div></div>
 <div class="row"><div><label>CustomerIP</label><input id="p_ip" value="108.100.81.214"></div><div><label>Capture</label><select id="p_cap"><option value="true">true</option><option value="false">false</option></select></div></div>
 <button id="b_buy">Pagar</button>
+</section>
+
+<!-- SECCIÓN NUEVA: Reembolso -->
+<section class="card">
+<h2>5. Reembolso (Refund)</h2>
+<label>TransactionId (ID de la transacción original)</label><input id="r_tx" placeholder="Ej. 12345678...">
+<div class="row">
+  <div><label>Amount a devolver</label><input id="r_amt" type="number" value="10000"></div>
+  <div><label>Currency</label><input id="r_cur" value="DOP"></div>
+</div>
+<label>Motivo (Reason)</label><input id="r_reason" value="Solicitud del cliente">
+<button id="b_refund">Procesar Reembolso</button>
 </section>
 
 <section class="card full">
@@ -170,7 +182,8 @@ $('b_act').onclick = async () => {
     { Token: v('a_tok'), ActivationCode: v('a_code') });
   loadProfilesQuiet();
 };
-async function loadProfilesQuiet() { /* refresca la tabla sin pisar el log de la activación */
+
+async function loadProfilesQuiet() {
   const id = v('cid'); if (!id) return;
   const r = await fetch(`/api/customers/${encodeURIComponent(id)}`);
   const j = await r.json().catch(() => ({}));
@@ -188,7 +201,19 @@ $('b_buy').onclick = async () => {
     Currency: v('p_cur'), Capture: v('p_cap'), CustomerIP: v('p_ip'),
     Invoice: v('p_inv'), Tax: v('p_tax'),
   });
-  newOrder(); // el Order no se puede repetir (TR006)
+  newOrder();
+};
+
+// 5. Reembolso
+$('b_refund').onclick = async () => {
+  const txId = v('r_tx');
+  if (!txId) return alert('Debes ingresar el ID de la transacción a reembolsar.');
+  await api('POST', '/api/refund', {
+    TransactionId: txId,
+    Amount: v('r_amt'),
+    Currency: v('r_cur'),
+    Reason: v('r_reason')
+  });
 };
 
 init();
